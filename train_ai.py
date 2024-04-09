@@ -13,9 +13,9 @@ if __name__ == '__main__':
     ai_name = 'model_1'
     circuit_name = 'circuit_1'
 
-    ai.load(ai_name)
+    #ai.load(ai_name)
     #ai.REMAKE_CIRCUIT = True
-    #ai.init()
+    ai.init()
 
     ai.create_variations()
     cars = ai.get_cars()

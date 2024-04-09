@@ -29,7 +29,7 @@ class AI (Controller):
         self.score = -1
 
         #self.learning_rate = 1
-        self.mutation_rate = 1
+        self.mutation_rate = 0.5
         self.destroy = 0
 
         self.Z = [None] * (len(self.layers)-1)
@@ -41,7 +41,7 @@ class AI (Controller):
                 self.destroy += 1
                 if self.destroy > 30:
                     self.end_of_run()
-                    self.car.reset()
+                    self.car.reset() 
                     return 0, 0
             else:
                 self.destroy = 0
@@ -67,9 +67,11 @@ class AI (Controller):
         self.end_of_run()
     
     def lap(self):
+        self.end_of_run(lap=True)
         if self.best is None:
             print('Lap finished : ', self.car.state, self.car.get_lap_game_time() / 60, "s")
-        self.end_of_run(lap=True)
+        else:
+            self.best.new_generation()
     
     def end_of_run(self, lap=False):
         if lap:
@@ -173,39 +175,43 @@ class AI_MODEL(AI): # for the best car
             if (self.car.Game.game_time - self.generation_game_time) > 60 * 25:
                 print("Time out")
             # new generation
-            self.model_updates -= len(self.variations)-1
-            self.generation += 1
-            if self.REMAKE_CIRCUIT:
-                self.car.Circuit.remake()
+            self.new_generation()
+    
 
-            # get the best car and update the model
-            score = -1
-            best = 0
-            for i in range(len(self.variations)):
-                if self.variations[i].car.is_active:
-                    self.variations[i].end_of_run()
-                if self.variations[i].score > score:
-                    score = self.variations[i].score
-                    best = self.variations[i]
-            if score > 5:
-                self.W = [np.copy(w) for w in best.W]
-                self.b = [np.copy(b) for b in best.b]
+    def new_generation(self):
+        self.model_updates -= len(self.variations)-1
+        self.generation += 1
+        if self.REMAKE_CIRCUIT:
+            self.car.Circuit.remake()
 
-            t = time.time() - self.generation_time
-            gt = (self.car.Game.game_time - self.generation_game_time) / 60
-            speed = gt / t
-            self.generation_time = time.time()
-            self.generation_game_time = self.car.Game.game_time
-            print(f"Generation {self.generation} best score : {score} time : {t} game time : {gt} speed : {speed}")
+        # get the best car and update the model
+        score = -1
+        best = 0
+        for i in range(len(self.variations)):
+            if self.variations[i].car.is_active:
+                self.variations[i].end_of_run()
+            if self.variations[i].score > score:
+                score = self.variations[i].score
+                best = self.variations[i]
+                
+        if score > 5:
+            self.W = [np.copy(w) for w in best.W]
+            self.b = [np.copy(b) for b in best.b]
 
-            for ai in self.variations[1:]:
-                ai.mutate()
-                # activate car body to be able to move
-                if not ai.car.is_active:
-                    self.car.Game.space.add(ai.car.body, ai.car.shape)
-                    ai.car.is_active = True
-                ai.car.reset()
-            self.car.reset()
+        t = time.time() - self.generation_time
+        gt = (self.car.Game.game_time - self.generation_game_time) / 60
+        speed = gt / t
+        self.generation_time = time.time()
+        self.generation_game_time = self.car.Game.game_time
+        print(f"Generation {self.generation} best score : {score} time : {t} game time : {gt} speed : {speed}")
+
+        for ai in self.variations[1:]:
+            ai.mutate()
+            # activate car body to be able to move
+            if not ai.car.is_active:
+                self.car.Game.space.add(ai.car.body, ai.car.shape)
+                ai.car.is_active = True
+            self.car.Game.reset_cars = True
 
     def save(self, path):
         # this is a very simple way to save the model

@@ -9,9 +9,9 @@ DEBUG = False
 
 # car class
 class Car:
-    MAX_STATIC_FRICTION = 150000
+    MAX_STATIC_FRICTION = 250000
     MAX_STATIC_FRICTION_SQ = MAX_STATIC_FRICTION ** 2
-    DYNAMIC_FRICTION = 70000
+    DYNAMIC_FRICTION = 25000
 
     def __init__(self, controller, mass=1000, color=(0, 0, 255,255)):
         #self.pos = np.zeros(2)
@@ -38,7 +38,7 @@ class Car:
         
         self.SIDE_FRICTION = 10000
 
-        self.MOTOR_FORCE = lambda x : 30000 * x if x * self.speed > 0 else 100000 * x
+        self.MOTOR_FORCE = lambda x : 50000 * x if x * self.speed > 0 else 200000 * x
 
         #self.image = pygame.image.load('car.png')
         #self.image.fill((0, 0, 0, 255), special_flags=pygame.BLEND_ADD) # add the color to the image
@@ -71,7 +71,7 @@ class Car:
     def get_lap_game_time(self):
         return self.Game.game_time - self.start_game_time
 
-    def update(self, dt=1/60, test = False):
+    def update(self, dt=1/60, test=False):
         if not self.is_active:
             return
         acceleration, steering = self.get_action()
@@ -82,11 +82,11 @@ class Car:
         rotation = np.array([[np.cos(self.body.angle), -np.sin(self.body.angle)], [np.sin(self.body.angle), np.cos(self.body.angle)]])
 
         # motor force
-        def get_motor_and_side_friction(angle, offset):
+        def get_motor_and_side_friction(angle, offset, motor_force=1):
             rotated_offset = np.dot(rotation, offset)
 
             wheel_direction = np.array([np.cos(angle), np.sin(angle)]) # direction of the wheel
-            motor_force_magnitude = self.MOTOR_FORCE(acceleration)           # magnitude of the motor
+            motor_force_magnitude = self.MOTOR_FORCE(acceleration) * motor_force        # magnitude of the motor
             
 
             side_angle = angle + np.pi / 2
@@ -97,8 +97,6 @@ class Car:
 
 
             motor_force_magnitude, wheel_side_friction_magnitude, derapage = Car.FRICTION(motor_force_magnitude, wheel_side_friction_magnitude)
-
-
 
             motor_force = wheel_direction * motor_force_magnitude
             wheel_side_friction = wheel_side_direction * ( - wheel_side_friction_magnitude)
@@ -114,11 +112,11 @@ class Car:
         
         front_wheel_angle = self.body.angle + steering * self.MAX_STEERING
         back_wheel_angle = self.body.angle
-        front_motor, front_wheel_side_friction = get_motor_and_side_friction(front_wheel_angle, front_wheel_offset)
+        front_motor, front_wheel_side_friction = get_motor_and_side_friction(front_wheel_angle, front_wheel_offset, motor_force=0)
         back_motor, back_wheel_side_friction = get_motor_and_side_friction(back_wheel_angle, back_wheel_offset)
 
         # apply the forces
-        if not test and DEBUG:
+        if DEBUG:
             # show the forces in red
             pygame.draw.line(self.Game.screen, (200, 0, 0), self.body.position + front_wheel_offset, self.body.position + front_wheel_offset + front_motor * 0.001)
             pygame.draw.line(self.Game.screen, (200, 0, 0), self.body.position + back_wheel_offset , self.body.position + back_wheel_offset  + back_motor * 0.001)
@@ -147,12 +145,15 @@ class Car:
     def reset(self):
         # reset the car
         # reset the position
-        self.body.velocity = (0, 0)
-        self.body.angular_velocity = 0
         self.body.position = list(self.Circuit.circuit[0])
         # nice orientation
         self.body.angle = np.arctan2(self.Circuit.circuit[1][1] - self.Circuit.circuit[0][1], self.Circuit.circuit[1][0] - self.Circuit.circuit[0][0])
-        
+        self.body.angle = 0
+        self.body.velocity = (0, 0)
+        self.body.angular_velocity = 0
+        self.body.force = (0, 0)
+        self.body.torque = 0
+
         self.speed = 0
         self.state = 0
         self.start_game_time = self.Game.game_time

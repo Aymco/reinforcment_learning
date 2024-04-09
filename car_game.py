@@ -10,12 +10,10 @@ import pymunk.pygame_util
 import random
 import time
 
-from tensorflow.keras.models import load_model
-
 from circuit import Circuit
 from car import Car
 from basic_ai import BasicAI, ManualController
-from ai import AI_MODEL
+from ai import AI_MODEL, AI
 
 DEBUG = True
 
@@ -29,12 +27,14 @@ class Game:
 
         self.objects = []
         self.game_time = 0
+        self.reset_cars= False
 
         self.test = False
         self.show_objects = show_objects
         self.running = False
         self.SCREEN = screen
         self.show_screen = self.SCREEN
+
         pygame.init()
 
         if self.SCREEN:
@@ -116,6 +116,12 @@ class Game:
                 car.get_input_state()
             for car in self.cars:
                 car.update(test=self.test)
+            
+            if self.reset_cars:
+                self.space.step(1/60)
+                for car in self.cars:
+                    car.reset()
+                self.reset_cars = False
                 
             
             # simulate the physics with small time steps
@@ -145,7 +151,10 @@ class Game:
                 self.screen.blit(text, (0, 0))
 
                 pygame.display.update()
-                self.clock.tick(60) # 60 fps
+                if not self.test:
+                    self.clock.tick(60) # 60 fps
+                else:
+                    self.clock.tick()
             else:
                 pass
                 #self.clock.tick() # no fps limit``

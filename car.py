@@ -166,7 +166,7 @@ class Car:
         self.input_state = {'state':self.state, 'speed':self.speed, 'rotation':self.body.angle}
 
         # get the distance with the walls
-        angles = np.array([-60, -30, -15, 0, 15, 30, 60]) * np.pi / 180
+        angles = np.array([-40, -15, 0, 15, 40]) * np.pi / 180
 
         distances = [400] * len(angles)
 

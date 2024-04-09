@@ -170,11 +170,11 @@ if __name__ == '__main__':
     
     # load model "model.keras"
     
-    ai = AI_MODEL(id=-1)
-    ai.load("model")
+    ai = AI_MODEL(layers=[7, 4, 3, 2])
+    ai.load("model_1")
     ai_car = Car(ai, color=(0,255,0, 255))
 
 
-    game = Game(cars=[manual_car,manual_car2, ai_car], circuit='circuit', hide_track=True) 
+    game = Game(cars=[manual_car,manual_car2, ai_car, basic_AI], circuit='circuit_1', hide_track=False) 
     game.game_loop()
 

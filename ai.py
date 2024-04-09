@@ -37,7 +37,7 @@ class AI (Controller):
     
     def update(self):
         if self.is_training:
-            if abs(self.car.speed) < 1:
+            if abs(self.car.speed) < 10:
                 self.destroy += 1
                 if self.destroy > 30:
                     self.end_of_run()
@@ -49,7 +49,9 @@ class AI (Controller):
 
     def get_input(state):
         distances = [state['distances'][i] / 400 for i in range(len(state['distances']))]
-        input = np.array([distances + [state['speed'] / 50 ]]).T
+        if state['speed'] > 300:
+            print('speed :', state['speed'])
+        input = np.array([distances + [state['speed'] / 300, state['state'] / 100 ]]).T
         input = np.clip(input, -1, 1)
         return input
 

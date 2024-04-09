@@ -128,4 +128,5 @@ class Circuit:
 
         self.generate_borders()
         self.add_to_space()
+        print(path, ' Circuit loaded !')
         return self

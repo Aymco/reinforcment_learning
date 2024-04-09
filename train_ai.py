@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
 
     # train the model
-    ai = AI_MODEL(train=True, layers=[8, 4, 3, 2], n_variations=100)
+    ai = AI_MODEL(train=True, layers=[7, 4, 3, 2], n_variations=100)
 
     ai_name = 'model_1'
     circuit_name = 'circuit_1'

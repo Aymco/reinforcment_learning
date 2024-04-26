@@ -12,10 +12,10 @@ class Controller:
     def get_action(self, state):
         pass
 
-    def wall_collide(self):
+    def wall_collide(self, car):
         pass
 
-    def lap(self):
+    def lap(self, car):
         print('Lap finished : ', self.car.state, self.car.get_lap_game_time() / 60, "s")
 
 

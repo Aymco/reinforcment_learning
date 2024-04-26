@@ -12,33 +12,34 @@ class Car:
     MAX_STATIC_FRICTION = 250000
     MAX_STATIC_FRICTION_SQ = MAX_STATIC_FRICTION ** 2
     DYNAMIC_FRICTION = 25000
+    WIDTH = 20
+    HEIGHT = 8
+    MAX_STEERING = np.pi / 6
+    SIDE_FRICTION = 10000
 
-    def __init__(self, controller, mass=1000, color=(0, 0, 255,255)):
+    def __init__(self, controller, mass=1000, color=(0, 0, 255,255), offset=[0, 0]):
         #self.pos = np.zeros(2)
         #self.velocity = np.zeros(2)
         #self.rotation = 0
         #self.rotation_velocity = 0
 
         self.speed = 0
+        self.is_active = False
 
+        self.offset = offset
 
-        self.MAX_STEERING = np.pi / 6
         
+        # if controller is AI
+        if controller.car == -1:
+            controller.cars.append(self)
+        else:
+            controller.car = self
 
-        self.WIDTH = 20
-        self.HEIGHT = 8
-        controller.car = self
         self.controller = controller
         self.color = color
         self.show_distances = False
-
-
-        self.is_active = True
-        
-        
-        self.SIDE_FRICTION = 10000
-
         self.MOTOR_FORCE = lambda x : 50000 * x if x * self.speed > 0 else 200000 * x
+        
 
         #self.image = pygame.image.load('car.png')
         #self.image.fill((0, 0, 0, 255), special_flags=pygame.BLEND_ADD) # add the color to the image
@@ -48,6 +49,7 @@ class Car:
         # pymunk
         self.MOMENT_INERTIE = 100000
         self.body = pymunk.Body(mass, self.MOMENT_INERTIE)
+        self.body.position = offset
         #self.body.position = (0, 0)
         #self.body.center_of_gravity = (0, 0)
         self.shape = pymunk.Poly(self.body, [(-self.WIDTH / 2, -self.HEIGHT / 2), (self.WIDTH / 2, -self.HEIGHT / 2), (self.WIDTH / 2, self.HEIGHT / 2), (-self.WIDTH / 2, self.HEIGHT / 2)])
@@ -55,7 +57,6 @@ class Car:
         self.shape.friction = 0.5
         self.shape.elasticity = 0.2
         self.shape.collision_type = 1
-
 
         # filter : only collide with the circuit
         self.shape.filter = pymunk.ShapeFilter(categories=0b1, mask=0b10)
@@ -76,6 +77,19 @@ class Car:
             return
         acceleration, steering = self.get_action()
 
+
+        if self.Game.training:
+            if abs(self.speed) < 10:
+                self.destroy_countdown += 1
+                if self.destroy_countdown > 30:
+                    self.controller.wall_collide(self)
+                    self.reset()
+                    return
+            else:
+                self.destroy_countdown = 0
+
+
+
         ### CAR PHYISICS ###
         front_wheel_offset = np.array([self.WIDTH / 2, 0])
         back_wheel_offset = np.array([-self.WIDTH / 2, 0])
@@ -88,13 +102,10 @@ class Car:
             wheel_direction = np.array([np.cos(angle), np.sin(angle)]) # direction of the wheel
             motor_force_magnitude = self.MOTOR_FORCE(acceleration) * motor_force        # magnitude of the motor
             
-
             side_angle = angle + np.pi / 2
             wheel_velocity = self.body.velocity + np.cross([0, 0, self.body.angular_velocity], [rotated_offset[0], rotated_offset[1], 0])[:2] # velocity of the wheel
             wheel_side_direction = np.array([np.cos(side_angle), np.sin(side_angle)])    # side direction
-            wheel_side_friction_magnitude = np.dot(wheel_velocity, wheel_side_direction)  * self.SIDE_FRICTION # side velocity * side friction
-
-
+            wheel_side_friction_magnitude = np.dot(wheel_velocity, wheel_side_direction) * self.SIDE_FRICTION # side velocity * side friction
 
             motor_force_magnitude, wheel_side_friction_magnitude, derapage = Car.FRICTION(motor_force_magnitude, wheel_side_friction_magnitude)
 
@@ -136,7 +147,7 @@ class Car:
         while np.dot(self.body.position - self.Circuit.circuit[self.state], vect) > 0:
             self.state = (self.state + 1)
             if self.state + 1 >= len(self.Circuit.circuit):
-                self.controller.lap()
+                self.controller.lap(self)
                 self.reset()
             vect = self.Circuit.circuit[self.state + 1] - self.Circuit.circuit[self.state]
 
@@ -145,7 +156,7 @@ class Car:
     def reset(self):
         # reset the car
         # reset the position
-        self.body.position = list(self.Circuit.circuit[0])
+        self.body.position = list(self.Circuit.circuit[0] + np.array(self.offset))
         # nice orientation
         self.body.angle = np.arctan2(self.Circuit.circuit[1][1] - self.Circuit.circuit[0][1], self.Circuit.circuit[1][0] - self.Circuit.circuit[0][0])
         self.body.angle = 0
@@ -158,7 +169,7 @@ class Car:
         self.state = 0
         self.start_game_time = self.Game.game_time
         self.start_time = time.time()
-        self.controller.destroy = 0
+        self.destroy_countdown = 0
 
 
     def get_input_state(self):
@@ -167,10 +178,8 @@ class Car:
         self.input_state = {'state':self.state, 'speed':self.speed, 'rotation':self.body.angle}
 
         # get the distance with the walls
-        angles = np.array([-40, -15, 0, 15, 40]) * np.pi / 180
-
+        angles = np.array([-30, 0, 30]) * np.pi / 180
         distances = [400] * len(angles)
-
         for i in range(len(angles)):
             # cast a ray with pymunk
             direction = np.array([np.cos(self.body.angle + angles[i]), np.sin(self.body.angle + angles[i])])
@@ -182,8 +191,18 @@ class Car:
             if self.show_distances:
                 #pygame.draw.line(self.Game.screen, (100, 0, 0), self.body.position, self.body.position + direction * distances[i], 1)
                 pygame.draw.circle(self.Game.screen, (0, 0, 0), self.body.position + direction * distances[i], 4)
-
         self.input_state['distances'] = distances
+
+        #TRACK ANGLE AT POSITION :
+        POSITIONS = [5, 10, 15, 20, 30]
+        self.input_state['directions'] = []
+        for pos in POSITIONS:
+            pos = (self.state + pos) % len(self.Circuit.circuit)
+            vect = self.Circuit.circuit[pos] - self.body.position
+            vect_angle = np.arctan2(vect[1], vect[0])
+            angle = ((vect_angle - self.body.angle)/np.pi + 1) % 2 - 1
+            self.input_state['directions'].append(angle)
+
         return self.input_state
     
     def get_action(self):
@@ -196,8 +215,6 @@ class Car:
         return f'Car : pos={self.body.position}, angle={self.body.angle}, state={self.state}'
     
     def wall_collide(arbiter, space, data):
-        
-        
         body = arbiter.shapes[0].body
         car = None
         for car in data['Game'].cars:
@@ -206,7 +223,18 @@ class Car:
         if not car.is_active:
             return False
         
-        car.controller.wall_collide()
+        car.controller.wall_collide(car)
         car.reset()
         return True
     
+
+    def activate(self):
+        if not self.is_active:
+            self.is_active = True
+            self.Game.space.add(self.body, self.shape)
+
+    def deactivate(self):
+        if self.is_active:
+            self.is_active = False
+            self.Game.space.remove(self.body, self.shape)
+

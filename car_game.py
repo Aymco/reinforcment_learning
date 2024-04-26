@@ -20,7 +20,7 @@ DEBUG = True
 
 # Game class
 class Game:
-    def __init__(self, width=800, height=600, cars=[], circuit=None, hide_track=False, show_objects=True, screen=True):
+    def __init__(self, width=800, height=600, cars=[], circuit=None, hide_track=False, show_objects=True, screen=True, training=False):
         self.width = 800
         self.height = 600
         self.cars = cars
@@ -34,6 +34,7 @@ class Game:
         self.running = False
         self.SCREEN = screen
         self.show_screen = self.SCREEN
+        self.training = training
 
         pygame.init()
 
@@ -49,9 +50,9 @@ class Game:
         self.space.gravity = (0, 0)
         self.space.damping = 0.95
 
-
         # collision handler
         handler = self.space.add_collision_handler(1,2)
+
         # call wall_collide when the car collide with the wall
         handler.begin = Car.wall_collide
         handler.data['Game'] = self
@@ -67,12 +68,11 @@ class Game:
         
         # add the cars to the space
         for car in self.cars:
-            self.space.add(car.body, car.shape)
-
-        for car in cars:
             car.Game = self
             car.Circuit = self.Circuit
+            car.activate()
             car.reset()
+            
 
 
     def game_loop(self):
@@ -162,9 +162,6 @@ class Game:
             if self.game_time % 120 == 0:
                 print("#", end="")
 
-                
-                
-
         pygame.quit()
 
 
@@ -179,11 +176,12 @@ if __name__ == '__main__':
     
     # load model "model.keras"
     
-    ai = AI_MODEL(layers=[7, 4, 3, 2])
+    ai = AI_MODEL(layers=[9, 4, 2])
     ai.load("model_1")
     ai_car = Car(ai, color=(0,255,0, 255))
 
-
-    game = Game(cars=[manual_car,manual_car2, ai_car, basic_AI], circuit='circuit_1', hide_track=False) 
+    cars = [manual_car,manual_car2, ai_car, basic_AI]
+    cars = [manual_car, ai_car]
+    game = Game(cars=cars, circuit='circuit_1', hide_track=False) 
     game.game_loop()
 

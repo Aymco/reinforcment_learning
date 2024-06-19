@@ -15,7 +15,7 @@ class Circuit:
         self.hide_circuit = hide_circuit
 
 
-    def add_to_space(self):
+    def __add_to_space(self):
         # add the circuit to the space
         # left and right borders of the circuit
         for i in range(len(self.circuit) - 1):
@@ -69,10 +69,10 @@ class Circuit:
         y_new = cs_y(index_new)
         self.circuit = np.array([(x_new[i], y_new[i]) for i in range(self.n_points)])
 
-        self.generate_borders()
-        self.add_to_space()
+        self.__generate_borders()
+        self.__add_to_space()
 
-    def generate_borders(self):
+    def __generate_borders(self):
         self.left = [None] * len(self.circuit)
         self.right = [None] * len(self.circuit)
         for i in range(len(self.circuit) - 1):
@@ -113,20 +113,20 @@ class Circuit:
         # save the circuit with numpy
         # save n_points, width, height, road_width, circuit
         data = {'n_points':self.n_points, 'width':self.width, 'height':self.height, 'road_width':self.road_width, 'circuit':self.circuit}
-        np.save(path, data)
+        np.save("saved/" + path, data)
         # doesn't work with because inhomogeneous list
 
     
     def load(self, path):
         # load the circuit
-        data = np.load(path + ".npy", allow_pickle=True).item()
+        data = np.load("saved/" + path + ".npy", allow_pickle=True).item()
         self.n_points = data['n_points']
         self.width = data['width']
         self.height = data['height']
         self.road_width = data['road_width']
         self.circuit = data['circuit']
 
-        self.generate_borders()
-        self.add_to_space()
+        self.__generate_borders()
+        self.__add_to_space()
         print(path, ' Circuit loaded !')
         return self

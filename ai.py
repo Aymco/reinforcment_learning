@@ -74,8 +74,8 @@ class AI (Controller):
 
 
 class AI_MODEL(AI): # for the best car
-    def __init__(self, train=False, id=-1, best=None, layers=[4,3], n_variations=100, n_duplicates=1):
-        super().__init__(train, id, best, layers)
+    def __init__(self, train=False, id=-1, best=None, layers=[4,3], n_variations=100, n_duplicates=1, nn=BasicNN):
+        super().__init__(train, id, best, layers, n_duplicates, nn=nn)
         self.n_variations = n_variations
         self.n_duplicates = n_duplicates
         self.variations = []
@@ -94,7 +94,7 @@ class AI_MODEL(AI): # for the best car
         self.variations = [self]
         if self.is_training:
             for i in range(1, self.n_variations):
-                variation = AI(train=self.is_training, id=i, best=self, layers=self.nn.layers, n_duplicate=self.n_duplicates)
+                variation = AI(train=self.is_training, id=i, best=self, layers=self.nn.layers, n_duplicate=self.n_duplicates, nn=self.nn.__class__)
                 variation.nn.mutate(bestnn=self.nn)
                 self.variations.append(variation)
     

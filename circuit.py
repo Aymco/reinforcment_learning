@@ -46,9 +46,10 @@ class Circuit:
         #base_points_count = 6
         #base_points = [(random.randint(self.road_width, self.width-self.road_width), random.randint(self.road_width, self.height-self.road_width)) for i in range(base_points_count)]
         
-        base_points = [(1,2),(3,2),(5,2),(7,2),(7,6),(5,6),(3,6),(1,6)]
-        base_points = [(x + random.random()*1 - 0.5, y  + random.random()*3 - 1.5) for x, y in base_points]     
-        base_points = [((x+0.5) * self.width /9, (y+0.5) * self.height / 9) for x, y in base_points]
+        base_points = [(2,2),(4,2),(6,2),(8,2),(9,4),(8,6),(6,6),(4,6),(2,6)]
+        #base_points = [(4,2),(6,2),(9,4),(6,6),(4,6)]
+        base_points = [(x + (random.random() - 0.5)*0, y  + (random.random()*2 - 1)) for x, y in base_points] + [(1,4)]
+        base_points = [((x+0.5) * self.width /11, (y) * self.height / 8) for x, y in base_points]
         
         # sort the points to have a non crossing circuit
         base_points = base_points + base_points[:3] # add the first 3 points to the end

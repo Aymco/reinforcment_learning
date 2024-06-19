@@ -10,7 +10,7 @@ class BasicNN:
         self.n_layers = len(layers)
 
         self.Z = [None] * (len(self.layers)-1)
-        self.A = [None] * (len(self.layers) - 1)
+        self.A = [None] * (len(self.layers)-1)
 
         #self.learning_rate = 1
         self.mutation_rate = 0.5

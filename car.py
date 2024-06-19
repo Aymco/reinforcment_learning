@@ -178,7 +178,7 @@ class Car:
         self.input_state = {'state':self.state, 'speed':self.speed, 'rotation':self.body.angle}
 
         # get the distance with the walls
-        angles = np.array([-30, 0, 30]) * np.pi / 180
+        angles = np.array([]) * np.pi / 180
         distances = [400] * len(angles)
         for i in range(len(angles)):
             # cast a ray with pymunk
@@ -194,7 +194,7 @@ class Car:
         self.input_state['distances'] = distances
 
         #TRACK ANGLE AT POSITION :
-        POSITIONS = [5, 10, 15, 20, 30]
+        POSITIONS = [10, 20, 30]
         self.input_state['directions'] = []
         for pos in POSITIONS:
             pos = (self.state + pos) % len(self.Circuit.circuit)

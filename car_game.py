@@ -77,6 +77,7 @@ class Game:
 
     def game_loop(self):
         pygame.display.set_caption('Cars')
+        self.screen.fill((255, 255, 255))
         self.running = True
         while self.running:
             for event in pygame.event.get():
@@ -98,6 +99,7 @@ class Game:
 
                     if event.key == pygame.K_a:
                         self.show_screen = not self.show_screen and self.SCREEN
+                    
                     # escape key
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
@@ -110,7 +112,7 @@ class Game:
 
             if self.show_screen:
                 self.screen.fill((255, 255, 255))
-
+                
             # get the actions
             for car in self.cars:
                 car.get_input_state()
@@ -125,7 +127,7 @@ class Game:
                 
             
             # simulate the physics with small time steps
-            steps = 2
+            steps = 1
             for i in range(steps):
                 self.space.step(1/60/steps)
 

@@ -3,19 +3,22 @@ from ai import AI_MODEL
 from car_game import Game
 
 
+from mem_nn import MemNN
+
+
 if __name__ == '__main__':
 
     TRAIN = True
 
 
     # train the model
-    ai = AI_MODEL(train=TRAIN, layers=[9, 4, 2], n_variations=500, n_duplicates=1)
+    ai = AI_MODEL(train=TRAIN, layers=[4, 4, 2], n_variations=500, n_duplicates=1, nn=MemNN)
 
     ai_name = 'model_all'
     circuit_name = 'circuit_1'
 
-    ai.load(ai_name)
-    #ai.init()
+    #ai.load(ai_name)
+    ai.nn.init()
     ai.REMAKE_CIRCUIT = True
     
     ai.create_variations()
@@ -25,7 +28,7 @@ if __name__ == '__main__':
     game.game_loop()
 
     # save the model
-    ai.save(ai_name)    
+    ai.save(ai_name)
 
     # save the circuit
     circuit_name = 'circuit_1'

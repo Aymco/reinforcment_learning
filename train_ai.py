@@ -4,6 +4,7 @@ from car_game import Game
 
 
 from mem_nn import MemNN
+from pytorch_nn import torchNN
 
 
 if __name__ == '__main__':
@@ -12,7 +13,8 @@ if __name__ == '__main__':
 
 
     # train the model
-    ai = AI_MODEL(train=TRAIN, layers=[4, 4, 2], n_variations=500, n_duplicates=1, nn=MemNN)
+    
+    ai = AI_MODEL(train=TRAIN, layers=[4, 4, 2], n_variations=500, n_duplicates=1, nn=torchNN)
 
     ai_name = 'model_all'
     circuit_name = 'circuit_1'

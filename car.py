@@ -44,7 +44,7 @@ class Car:
         #self.image = pygame.image.load('car.png')
         #self.image.fill((0, 0, 0, 255), special_flags=pygame.BLEND_ADD) # add the color to the image
         self.Game = None
-        self.Circuit = None
+        self.Game.Circuit = None
 
         # pymunk
         self.MOMENT_INERTIE = 100000
@@ -142,23 +142,22 @@ class Car:
         # if the car is on front of the next checkpoint
         # dot product : if the dot product is positive, the car is in front of the checkpoint
 
-
-        vect = self.Circuit.circuit[self.state + 1] - self.Circuit.circuit[self.state]
-        while np.dot(self.body.position - self.Circuit.circuit[self.state], vect) > 0:
+        vect = self.Game.Circuit.circuit[self.state + 1] - self.Game.Circuit.circuit[self.state]
+        while np.dot(self.body.position - self.Game.Circuit.circuit[self.state], vect) > 0:
             self.state = (self.state + 1)
-            if self.state + 1 >= len(self.Circuit.circuit):
+            if self.state + 1 >= len(self.Game.Circuit.circuit):
                 self.controller.lap(self)
                 self.reset()
-            vect = self.Circuit.circuit[self.state + 1] - self.Circuit.circuit[self.state]
+            vect = self.Game.Circuit.circuit[self.state + 1] - self.Game.Circuit.circuit[self.state]
 
 
     
     def reset(self):
         # reset the car
         # reset the position
-        self.body.position = list(self.Circuit.circuit[0] + np.array(self.offset))
+        self.body.position = list(self.Game.Circuit.circuit[0] + np.array(self.offset))
         # nice orientation
-        self.body.angle = np.arctan2(self.Circuit.circuit[1][1] - self.Circuit.circuit[0][1], self.Circuit.circuit[1][0] - self.Circuit.circuit[0][0])
+        self.body.angle = np.arctan2(self.Game.Circuit.circuit[1][1] - self.Game.Circuit.circuit[0][1], self.Game.Circuit.circuit[1][0] - self.Game.Circuit.circuit[0][0])
         self.body.angle = 0
         self.body.velocity = (0, 0)
         self.body.angular_velocity = 0
@@ -194,11 +193,11 @@ class Car:
         self.input_state['distances'] = distances
 
         #TRACK ANGLE AT POSITION :
-        POSITIONS = [10, 20, 30]
+        POSITIONS = [5, 10, 20]
         self.input_state['directions'] = []
         for pos in POSITIONS:
-            pos = (self.state + pos) % len(self.Circuit.circuit)
-            vect = self.Circuit.circuit[pos] - self.body.position
+            pos = (self.state + pos) % len(self.Game.Circuit.circuit)
+            vect = self.Game.Circuit.circuit[pos] - self.body.position
             vect_angle = np.arctan2(vect[1], vect[0])
             angle = ((vect_angle - self.body.angle)/np.pi + 1) % 2 - 1
             self.input_state['directions'].append(angle)
